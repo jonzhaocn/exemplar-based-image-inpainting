@@ -1,4 +1,4 @@
-% this function is used to calculate priority of point in boundary and
+% this function is used to calculate priority of patch in boundary and
 % return the coordination of the patch which has the biggest priority
 % Input:
 %   image_data: image array
@@ -7,6 +7,7 @@
 %   coordinate: the coordinate of the patch which has the biggest priority
 %   Information: some information of image, is a strcutre
 function [coordinate, Information] = calculate_priority(image_data, Information)
+    % information
     Boundary = Information.Boundary;
     priority_map = Information.priority_map;
     Config = Information.Config;

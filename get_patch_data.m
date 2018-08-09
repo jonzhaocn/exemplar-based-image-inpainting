@@ -1,3 +1,12 @@
+% get a region data in a small window
+% Input:
+%   whole_data:
+%   center_coordinate:
+%   patch_size:
+% Output:
+%   data:
+%   row_offset:
+%   col_offset:
 function [data, row_offset, col_offset] = get_patch_data(whole_data, center_coordinate, patch_size)
     row_start = center_coordinate(1) - (patch_size-1)/2;
     row_end = center_coordinate(1) + (patch_size-1)/2;

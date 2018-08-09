@@ -1,3 +1,9 @@
+% update some information which help to inpaint image
+% Input:
+%   image_data:
+%   coordinate:
+% Output:
+%   Information:
 function Information = update_information(image_data, coordinate, Information)
     %% init
     mask = Information.mask;

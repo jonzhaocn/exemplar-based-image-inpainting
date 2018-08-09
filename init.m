@@ -1,33 +1,42 @@
+% initiate some information which help to inpaint image
+% Input:
+%   image_data: image array
+%   Config: patch size and the mark color which point out the missing area
+% Output:
+%   image_data: image array
+%   Information: some information help to inpaint image
+% 
 function [image_data, Information] = init(image_data, Config)
     %% check
     if mod(Config.patch_size,2)==0
         error('patch_size should be a odd.')
     end
     %% calculate
-    % mask
+    % mask: missing pixel will be marked as 0
     mark_color = Config.mark_color;
     mask = ~(image_data(:,:,1)==mark_color(1) & image_data(:,:,2)==mark_color(2) & image_data(:,:,3)==mark_color(3));
     mask_3d = cat(3,mask,mask,mask);
     image_data = rgb2lab(image_data);
     % confidence of pixel
     pixel_confidence = double(mask);
-    % patch_set
+    % patch_set, it will used to find out the nearest patch vioulently
     patch_set_c1 = im2col(image_data(:,:,1).*mask, [Config.patch_size, Config.patch_size], 'sliding');
     patch_set_c2 = im2col(image_data(:,:,2).*mask, [Config.patch_size, Config.patch_size], 'sliding');
     patch_set_c3 = im2col(image_data(:,:,3).*mask, [Config.patch_size, Config.patch_size], 'sliding');
     patch_set = [patch_set_c1;patch_set_c2;patch_set_c3];
     patch_set = patch_set(:, all(patch_set,1));
-    % boundary_map
+    % boundary_map, the pixel in boundary will be marked as 1
     boundary_map = 1-mask;
     se = strel('square',3);
     boundary_map = imdilate(boundary_map, se) - boundary_map;
     priority_map = zeros(size(boundary_map));
     % Boundary
     [row, col] = find(boundary_map==1);
+    % update_sub, the coordination of the patch whos priority need to be calculate 
     update_sub = [row col];
     is_empty = ~any(boundary_map(:));
     Boundary = struct('map', boundary_map, 'update_sub', update_sub, 'is_empty', is_empty);
-    % Gradient
+    % Gradient, image gradient in x axis and y axis
     gx = image_data(:,[2:end,end],:);
     gx = gx - image_data;
     gy = image_data([1,1:end-1],:,:);

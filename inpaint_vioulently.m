@@ -1,3 +1,11 @@
+% inpaint the image vioulently
+% Input:
+%   image_data:
+%   coordinate:
+%   Information:
+% Output:
+%   image_data
+
 function image_data = inpaint_vioulently(image_data, coordinate, Information)
     % information
     patch_set = Information.patch_set;

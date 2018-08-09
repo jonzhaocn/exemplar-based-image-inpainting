@@ -1,3 +1,13 @@
+% get normal vector of a pixel in a 3*3 window
+% create a angle table which has 256 cases, every type of pixels existing
+% or missing corresponds to a case
+% the normal vector point out center of missing area in 3*3 window 
+% Input:
+%   mask:
+%   coordination:
+% Output:
+%   normal_vector:
+
 function normal_vector = get_normal_vector(mask, coordination)
     %% angle_table
     % pixel assignment
