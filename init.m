@@ -17,14 +17,11 @@ function [image_data, Information] = init(image_data, Config)
     mask = ~(image_data(:,:,1)==mark_color(1) & image_data(:,:,2)==mark_color(2) & image_data(:,:,3)==mark_color(3));
     mask_3d = cat(3,mask,mask,mask);
     image_data = rgb2lab(image_data);
+    % source_region and target_region
+    source_region = mask;
+    target_region = 1-mask;
     % confidence of pixel
     pixel_confidence = double(mask);
-    % patch_set, it will used to find out the nearest patch vioulently
-    patch_set_c1 = im2col(image_data(:,:,1).*mask, [Config.patch_size, Config.patch_size], 'sliding');
-    patch_set_c2 = im2col(image_data(:,:,2).*mask, [Config.patch_size, Config.patch_size], 'sliding');
-    patch_set_c3 = im2col(image_data(:,:,3).*mask, [Config.patch_size, Config.patch_size], 'sliding');
-    patch_set = [patch_set_c1;patch_set_c2;patch_set_c3];
-    patch_set = patch_set(:, all(patch_set,1));
     % boundary_map, the pixel in boundary will be marked as 1
     boundary_map = 1-mask;
     se = strel('square',3);
@@ -59,6 +56,6 @@ function [image_data, Information] = init(image_data, Config)
     gy = gy.*mask_3d;
     Gradient = struct('gx',gx,'gy',gy);
     % Information
-    Information = struct('mask',mask, 'patch_set',patch_set, 'Boundary', Boundary, 'priority_map', priority_map, 'Config', Config,...
-                        'pixel_confidence', pixel_confidence, 'Gradient', Gradient);
+    Information = struct('mask',mask, 'Boundary', Boundary, 'priority_map', priority_map, 'Config', Config,...
+                        'pixel_confidence', pixel_confidence, 'Gradient', Gradient, 'source_region', source_region, 'target_region', target_region);
 end

@@ -3,9 +3,9 @@
 clear;
 clc;
 % config
-image_path = '2.png';
+image_path = '1.png';
 mark_color = [0,0,0];
-Config = struct('patch_size', 15, ...
+Config = struct('patch_size', 9, ...
                 'mark_color', mark_color);
 image_data = imread(image_path);
 % init 
@@ -17,6 +17,7 @@ while ~Information.Boundary.is_empty
     [coordinate, Information] = calculate_priority(image_data, Information);
     % inpaint vioulently
     image_data = inpaint_vioulently(image_data, coordinate, Information);
+    figure(1);
     imshow(lab2rgb(image_data));
     % update some infomation which help to inpaint image
     Information = update_information(image_data, coordinate, Information);
