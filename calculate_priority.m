@@ -10,11 +10,10 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
     % information
     Boundary = Information.Boundary;
     priority_map = Information.priority_map;
-    Config = Information.Config;
     mask = Information.mask;
     pixel_confidence = Information.pixel_confidence;
     Gradient = Information.Gradient;
-    patch_size = Config.patch_size;
+    patch_size = Information.patch_size;
     % 
     image_size = size(image_data);
     for i = 1:size(Boundary.update_sub,1)

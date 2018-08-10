@@ -11,8 +11,7 @@ function Information = update_information(image_data, coordinate, Information)
     priority_map = Information.priority_map;
     pixel_confidence = Information.pixel_confidence;
     Gradient = Information.Gradient;
-    Config = Information.Config;
-    patch_size = Config.patch_size;
+    patch_size = Information.patch_size;
     %% update mask
     old_mask = mask;
     [~, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
