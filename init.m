@@ -43,13 +43,21 @@ function [image_data, Information] = init(image_data, Config)
         c = update_sub(i,2);
         if c+1<=size(image_data,2) && mask(r,c+1)==1
             gx(r,c,:) = image_data(r,c+1,:)-image_data(r,c,:);
-        elseif c-1>=1 && mask(r,c-1)==1
-            gx(r,c,:) = image_data(r,c-1,:)-image_data(r,c,:);
+        else
+            if c-1>=1 && mask(r,c-1)==1
+                gx(r,c,:) = image_data(r,c-1,:)-image_data(r,c,:);
+            else
+                gx(r,c,:) = 0;
+            end
         end
         if r-1>=1 && mask(r-1,c)==1
             gy(r,c,:) = image_data(r-1,c,:) - image_data(r,c,:);
-        elseif r+1<=size(image_data,1) && mask(r+1,c)==1
-            gy(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
+        else
+            if r+1<=size(image_data,1) && mask(r+1,c)==1
+                gy(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
+            else
+                gy(r,c,:) = 0;
+            end
         end
     end
     gx = gx.*mask_3d;

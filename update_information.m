@@ -44,7 +44,8 @@ function Information = update_information(image_data, coordinate, Information)
     %% update priority_map
     priority_map(row_offset+coordinate(1), col_offset+coordinate(2)) = 0;
     %% update pixel_confidence
-    update_pixel = (~old_mask & mask).* reshape(1:numel(mask), size(mask));
+    index = reshape(1:numel(mask), size(mask));
+    update_pixel = (~old_mask & mask).* index;
     update_pixel(update_pixel==0) = [];
     patch_pixel_confidence = get_patch_data(pixel_confidence, coordinate, patch_size);
     pixel_confidence(update_pixel) = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
@@ -71,15 +72,26 @@ function Information = update_information(image_data, coordinate, Information)
     for i =1:size(recount_map,1)
         for j = 1:size(recount_map,2)
             [r, c] = ind2sub(size(mask), index(i,j));
+            if recount_map(i,j)==0 || mask(r,c)==0
+                continue;
+            end
             if c+1<=size(image_data,2) && mask(r,c+1)==1
                 gx(i,j,:) = image_data(r,c+1,:)-image_data(r,c,:);
-            elseif c-1>=1 && mask(r,c-1)==1
-                gx(i,j,:) = image_data(r,c-1,:)-image_data(r,c,:);
+            else
+                if c-1>=1 && mask(r,c-1)==1
+                    gx(i,j,:) = image_data(r,c-1,:)-image_data(r,c,:);
+                else
+                    gx(i,j,:) = 0;
+                end
             end
             if r-1>=1 && mask(r-1,c)==1
                 gy(i,j,:) = image_data(r-1,c,:) - image_data(r,c,:);
-            elseif r+1<=size(image_data,1) && mask(r+1,c)==1
-                gy(i,j,:) = image_data(r+1,c,:)-image_data(r,c,:);
+            else
+                if r+1<=size(image_data,1) && mask(r+1,c)==1
+                    gy(i,j,:) = image_data(r+1,c,:)-image_data(r,c,:);
+                else
+                    gy(i,j,:) = 0;
+                end
             end
         end
     end

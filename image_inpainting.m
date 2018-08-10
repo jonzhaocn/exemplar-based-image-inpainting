@@ -3,9 +3,9 @@
 clear;
 clc;
 % config
-image_path = '1.png';
+image_path = '4.png';
 mark_color = [0,0,0];
-Config = struct('patch_size', 9, ...
+Config = struct('patch_size',11, ...
                 'mark_color', mark_color);
 image_data = imread(image_path);
 % init 

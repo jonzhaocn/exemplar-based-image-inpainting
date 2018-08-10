@@ -31,18 +31,14 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
         patch_pixel_confidence = get_patch_data(pixel_confidence, [row,col], patch_size);
         patch_confidence = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
         % isophote
-        gx = get_patch_data(Gradient.gx, [row,col], patch_size);
-        gx = sum(gx, 3)/128/3;
-        gy = get_patch_data(Gradient.gy, [row,col], patch_size);
-        gy = sum(gy, 3)/128/3;
-        vectors_norm = sqrt(gx.^2 + gy.^2);
-        [~, index] = max(vectors_norm(:));
+        gx = get_patch_data(Gradient.gx, [row, col], patch_size);
+        gy = get_patch_data(Gradient.gy, [row, col], patch_size);
+        gx = sum(gx,3)/128;
+        gy = sum(gy,3)/128;
+        vector_norm = sqrt(gx.^2 + gy.^2);
+        [~, index] = max(vector_norm(:));
         gx = gx(index);
         gy = gy(index);
-%         gx = Gradient.gx(row, col, :);
-%         gy = Gradient.gy(row, col, :);
-%         gx = sum(gx, 3)/128/3;
-%         gy = sum(gy, 3)/128/3;
         isophote = [-gy, gx];
         % normal vector
 %         normal_vector = get_normal_vector(mask, [row, col]);
