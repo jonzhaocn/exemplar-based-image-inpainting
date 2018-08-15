@@ -34,11 +34,9 @@ function nearest_patch = find_nearest_patch(image_data, target_patch, patch_mask
     % set forbid_area
     % we should set the forbid area to avoid to obtain a patch that has
     % some missing pixels
-    se = strel('disk', patch_size);
-    forbid_area = imdilate(target_region, se);
     LARGE_CONST = 100;
-    ssd_map = ssd_map + forbid_area(half_patch_size+1:size(forbid_area,1)-half_patch_size, ...
-                half_patch_size+1:size(forbid_area, 2)-half_patch_size) * LARGE_CONST;
+    forbid_area = filter2(ones(patch_size, patch_size),target_region*LARGE_CONST,'valid');
+    ssd_map = ssd_map + forbid_area;
     % select the nearest patch
     [~, index] = min(ssd_map(:));
     [row, col] = ind2sub(size(ssd_map), index);

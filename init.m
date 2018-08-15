@@ -16,7 +16,6 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     % mask: missing pixel will be marked as 0
     mask = 1 - target_region;
     mask_3d = cat(3,mask,mask,mask);
-    image_data = rgb2lab(image_data);
     % source_region and target_region
     source_region = mask;
     % confidence of pixel
