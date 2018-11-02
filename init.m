@@ -65,6 +65,13 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     gy = gy.*mask_3d;
     Gradient = struct('gx',gx,'gy',gy);
     % Information
-    Information = struct('mask',mask, 'Boundary', Boundary, 'priority_map', priority_map, 'pixel_confidence', pixel_confidence, 'Gradient', Gradient,...
-                         'source_region', source_region, 'target_region', target_region, 'patch_size', patch_size);
+    Information.mask = mask;
+    Information.Boundary = Boundary;
+    Information.priority_map = priority_map;
+    Information.pixel_confidence = pixel_confidence;
+    Information.Gradient = Gradient;
+    Information.source_region = source_region;
+    Information.target_region = target_region;
+    Information.patch_size = patch_size;
+    Information.image_data_CIELab = rgb2lab(image_data);
 end
