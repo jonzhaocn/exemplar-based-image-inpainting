@@ -32,16 +32,16 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
         % isophote
         gx = get_patch_data(Gradient.gx, [row, col], patch_size);
         gy = get_patch_data(Gradient.gy, [row, col], patch_size);
-        gx = sum(gx,3)/128;
-        gy = sum(gy,3)/128;
+        gx = sum(gx,3);
+        gy = sum(gy,3);
         vector_norm = sqrt(gx.^2 + gy.^2);
         [~, index] = max(vector_norm(:));
         gx = gx(index);
         gy = gy(index);
         isophote = [-gy, gx];
-        % normal vector
-%         normal_vector = get_normal_vector(mask, [row, col]);
-        normal_vector = get_normal_vector2(mask, [row,col], patch_size);
+%         normal vector
+        normal_vector = get_normal_vector(mask, [row, col]);
+%         normal_vector = get_normal_vector2(mask, [row,col], patch_size);
         priority_map(row,col) = patch_confidence * norm(isophote .* normal_vector);
     end
     [value, index] = max(priority_map(:));

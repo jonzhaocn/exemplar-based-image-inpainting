@@ -17,7 +17,6 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     mask = 1 - target_region;
     mask_3d = cat(3,mask,mask,mask);
     % source_region and target_region
-    source_region = mask;
     % confidence of pixel
     pixel_confidence = double(mask);
     % boundary_map, the pixel in boundary will be marked as 1
@@ -64,14 +63,19 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     gx = gx.*mask_3d;
     gy = gy.*mask_3d;
     Gradient = struct('gx',gx,'gy',gy);
+    % stable_patch_map
+    % if a patch do not contain missing pixels, it is stabel
+    missing_label = 999;
+    stable_patch_index_map = im2col(image_data(:,:,1)+(1-mask)*missing_label, [patch_size, patch_size], 'sliding');
+    stable_patch_index_map = all(stable_patch_index_map~=missing_label);
+    
     % Information
     Information.mask = mask;
     Information.Boundary = Boundary;
     Information.priority_map = priority_map;
     Information.pixel_confidence = pixel_confidence;
     Information.Gradient = Gradient;
-    Information.source_region = source_region;
-    Information.target_region = target_region;
     Information.patch_size = patch_size;
     Information.image_data_CIELab = rgb2lab(image_data);
+    Information.stable_patch_index_map = stable_patch_index_map;
 end

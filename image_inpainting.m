@@ -3,7 +3,7 @@
 clear;
 clc;
 % config
-image_path = './image/3.jpg';
+image_path = './image/5.jpg';
 patch_size = 11;
 image_data = imread(image_path);
 image_data = im2double(image_data);
@@ -21,7 +21,8 @@ imshow(image_data);
 imwrite(image_data, 'masked_image.jpg');
 % init
 [image_data, Information] = init(image_data, patch_size, target_region);
-% while there are some missing pixels in image, inpaint the image 
+% while there are some missing pixels in image, inpaint the image
+
 while ~Information.Boundary.is_empty
     % calculate the priority of the patch in boundary, select the patch
     % which has the biggest priority to inpaint

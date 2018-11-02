@@ -12,10 +12,10 @@
 function nearest_patch = find_nearest_patch(image_data, coordinate, Information)
     % information
     mask = Information.mask;
-    target_region = Information.target_region;
     patch_size = Information.patch_size;
     half_patch_size = floor(patch_size/2);
     image_data_CIELab = Information.image_data_CIELab;
+    stable_patch_index_map = Information.stable_patch_index_map;
     
     % get the target patch and it's mask according to the coordiante
     [patch_mask, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
@@ -41,13 +41,10 @@ function nearest_patch = find_nearest_patch(image_data, coordinate, Information)
     ssd_map_2 = ssd_patch_channel(image_data_CIELab(:,:,2), target_patch(:,:,2), patch_mask);
     ssd_map_3 = ssd_patch_channel(image_data_CIELab(:,:,3), target_patch(:,:,3), patch_mask);
     ssd_map = ssd_map_1 + ssd_map_2 + ssd_map_3;
-    ssd_map = normalize_matrix(ssd_map);
-    % set forbid_area
-    % we should set the forbid area to avoid to obtain a patch that has
-    % some missing pixels
-    LARGE_CONST = 100;
-    forbid_area = filter2(ones(patch_size, patch_size),target_region*LARGE_CONST,'valid');
-    ssd_map = ssd_map + forbid_area;
+    
+    % we should set the forbid area to avoid to obtain a patch that has some missing pixels
+    ssd_map(stable_patch_index_map==0)=inf;
+    
     % select the nearest patch
     [~, index] = min(ssd_map(:));
     [row, col] = ind2sub(size(ssd_map), index);
@@ -60,10 +57,4 @@ function ssd_map = ssd_patch_channel(image_channel, target_patch_channel, patch_
     target_patch_channel = target_patch_channel .* patch_mask;
     ssd_map = filter2(patch_mask, image_channel.^2, 'valid') + sum(sum(target_patch_channel.^2)) ...
         - 2*filter2(target_patch_channel, image_channel, 'valid');
-end
-
-function norm_matrix = normalize_matrix(matrix)
-    min_value = min(matrix(:));
-    max_value = max(matrix(:));
-    norm_matrix = (matrix - min_value) / (max_value - min_value);
 end
