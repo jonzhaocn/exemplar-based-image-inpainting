@@ -66,9 +66,10 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     % stable_patch_map
     % if a patch do not contain missing pixels, it is stabel
     missing_label = 999;
-    stable_patch_index_map = im2col(image_data(:,:,1)+(1-mask)*missing_label, [patch_size, patch_size], 'sliding');
-    stable_patch_index_map = all(stable_patch_index_map~=missing_label);
-    
+    stable_patch_index = im2col(image_data(:,:,1)+(1-mask)*missing_label, [patch_size, patch_size], 'sliding');
+    stable_patch_index = all(stable_patch_index~=missing_label);
+    % image_pixel_index
+    image_pixel_index = reshape(1:numel(mask), size(mask));
     % Information
     Information.mask = mask;
     Information.Boundary = Boundary;
@@ -77,5 +78,6 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     Information.Gradient = Gradient;
     Information.patch_size = patch_size;
     Information.image_data_CIELab = rgb2lab(image_data);
-    Information.stable_patch_index_map = stable_patch_index_map;
+    Information.stable_patch_index_map = stable_patch_index;
+    Information.image_pixel_index = image_pixel_index;
 end

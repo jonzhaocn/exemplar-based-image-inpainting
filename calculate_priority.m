@@ -32,10 +32,9 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
         % isophote
         gx = get_patch_data(Gradient.gx, [row, col], patch_size);
         gy = get_patch_data(Gradient.gy, [row, col], patch_size);
-        gx = sum(gx,3);
-        gy = sum(gy,3);
-        vector_norm = sqrt(gx.^2 + gy.^2);
-        [~, index] = max(vector_norm(:));
+        % get sum along the thrid dim
+        gradient_norm = sum(sqrt(gx.^2 + gy.^2), 3) / size(gx,3);
+        [~, index] = max(gradient_norm(:));
         gx = gx(index);
         gy = gy(index);
         isophote = [-gy, gx];

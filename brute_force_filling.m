@@ -13,7 +13,7 @@ function image_data = brute_force_filling(image_data, coordinate, Information)
     
     % get the target patch and it's mask according to the coordiante
     [patch_mask, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
-    patch_mask_3d = cat(3, patch_mask, patch_mask, patch_mask);
+    patch_mask_3d = repmat(patch_mask, 1,1,3);
     patch_image_data = get_patch_data(image_data, coordinate, patch_size);
     
     % find the nearest patch 

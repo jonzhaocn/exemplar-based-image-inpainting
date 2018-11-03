@@ -12,11 +12,12 @@ function Information = update_information(image_data, coordinate, Information)
     pixel_confidence = Information.pixel_confidence;
     Gradient = Information.Gradient;
     patch_size = Information.patch_size;
+    image_pixel_index = Information.image_pixel_index;
     %% update mask
     old_mask = mask;
     [~, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
     mask(row_offset+coordinate(1), col_offset+coordinate(2)) = 1;
-    mask_3d = cat(3, mask, mask, mask);
+    mask_3d = repmat(mask, 1,1,3);
     %% update Boundary
     % update Boundary.map
     windows_size = patch_size+4;
@@ -34,8 +35,7 @@ function Information = update_information(image_data, coordinate, Information)
         Boundary.is_empty = true;
     end
     % update Boundary.update_sub
-    index = reshape(1:numel(Boundary.map), size(Boundary.map));
-    index = Boundary.map .* index;
+    index = Boundary.map .* image_pixel_index;
     update_index = index(row_offset+coordinate(1), col_offset+coordinate(2));
     update_index(update_index==0) = [];
     [row, col] = ind2sub(size(Boundary.map), update_index(:));
@@ -43,8 +43,7 @@ function Information = update_information(image_data, coordinate, Information)
     %% update priority_map
     priority_map(row_offset+coordinate(1), col_offset+coordinate(2)) = 0;
     %% update pixel_confidence
-    index = reshape(1:numel(mask), size(mask));
-    update_pixel = (~old_mask & mask).* index;
+    update_pixel = (~old_mask & mask).* image_pixel_index;
     update_pixel(update_pixel==0) = [];
     patch_pixel_confidence = get_patch_data(pixel_confidence, coordinate, patch_size);
     pixel_confidence(update_pixel) = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
@@ -61,8 +60,7 @@ function Information = update_information(image_data, coordinate, Information)
     gx = gx(row_indicator, col_indicator,:);
     gy = gy(row_indicator, col_indicator,:);
     
-    index = reshape(1:numel(mask), size(mask));
-    index = get_patch_data(index, coordinate, windows_size-2);
+    index = get_patch_data(image_pixel_index, coordinate, windows_size-2);
     recount_map = zeros(size(row_offset,1), size(col_offset,1));
     row = row_offset==-(windows_size-3)/2 | row_offset==-(windows_size-5)/2 | row_offset==(windows_size-3)/2 | row_offset==(windows_size-5)/2;
     col = col_offset==-(windows_size-3)/2 | col_offset==-(windows_size-5)/2 | col_offset==(windows_size-3)/2 | col_offset==(windows_size-5)/2;

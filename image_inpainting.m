@@ -3,13 +3,13 @@
 clear;
 clc;
 % config
-image_path = './image/5.jpg';
-patch_size = 11;
+image_path = './test_images/5.jpg';
+patch_size = 9;
 image_data = imread(image_path);
 image_data = im2double(image_data);
 % get missing region from user
 % missing region point out where the missing pixels are in image
-figure(1), imshow(image_data);
+imshow(image_data);
 % use mouse to get some coordination by clicking
 [x, y] = ginput;
 % after clicking, you should press ENTER
@@ -23,6 +23,7 @@ imwrite(image_data, 'masked_image.jpg');
 [image_data, Information] = init(image_data, patch_size, target_region);
 % while there are some missing pixels in image, inpaint the image
 
+tic
 while ~Information.Boundary.is_empty
     % calculate the priority of the patch in boundary, select the patch
     % which has the biggest priority to inpaint
@@ -34,4 +35,7 @@ while ~Information.Boundary.is_empty
     % update some infomation which help to inpaint image
     Information = update_information(image_data, coordinate, Information);
 end
+toc
+
 imwrite(image_data, 'image_inpainted.jpg');
+imshow(image_data);
