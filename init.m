@@ -30,31 +30,37 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     update_sub = [row col];
     is_empty = ~any(boundary_map(:));
     Boundary = struct('map', boundary_map, 'update_sub', update_sub, 'is_empty', is_empty);
+    
+    % normal vector
+    [Nx, Ny] = gradient(double(~mask));
+    normal_vector_matrix = cat(3, Nx, Ny);
+    normal_vector_matrix = normal_vector_matrix ./ (sqrt(Nx.^2 + Ny.^2));
+    normal_vector_matrix(~isfinite(normal_vector_matrix))=0; % handle NaN and Inf
+    
     % Gradient, image gradient in x axis and y axis
-    gx = image_data(:,[2:end,end],:);
+    gx = image_data([2:end,end],:,:);
     gx = gx - image_data;
-    gy = image_data([1,1:end-1],:,:);
+    gy = image_data(:,[2:end,end],:);
     gy = gy - image_data;
-    for i=1:size(update_sub,1)
+    for i=1:size(update_sub, 1)
         r = update_sub(i,1);
         c = update_sub(i,2);
-        % gx(r,c) = image(r,c+1) - image(r,c)
-        if c+1<=size(image_data,2) && mask(r,c+1)==1
-            gx(r,c,:) = image_data(r,c+1,:)-image_data(r,c,:);
-        % if the pixels on I(r,c)'s right is missing, using the left one
-        % instead
+        % gx(r,c) = image(r+1,c) - image(r,c)
+        if r+1<=size(image_data,1) && mask(r+1,c)==1
+            gx(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
+        % if the pixels below I(r,c) is missing, using the above one instead
         else
-            if c-1>=1 && mask(r,c-1)==1
-                gx(r,c,:) = image_data(r,c-1,:)-image_data(r,c,:);
+            if r-1>=1 && mask(r-1,c)==1
+                gx(r,c,:) = image_data(r-1,c,:)-image_data(r,c,:);
             else
                 gx(r,c,:) = 0;
             end
         end
-        if r-1>=1 && mask(r-1,c)==1
-            gy(r,c,:) = image_data(r-1,c,:) - image_data(r,c,:);
+        if c+1<=size(image_data, 2) && mask(r,c+1)==1
+            gy(r,c,:) = image_data(r,c+1,:) - image_data(r,c,:);
         else
-            if r+1<=size(image_data,1) && mask(r+1,c)==1
-                gy(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
+            if c-1>=1 && mask(r,c-1)==1
+                gy(r,c,:) = image_data(r,c-1,:)-image_data(r,c,:);
             else
                 gy(r,c,:) = 0;
             end
@@ -80,4 +86,5 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     Information.image_data_CIELab = rgb2lab(image_data);
     Information.stable_patch_index_map = stable_patch_index;
     Information.image_pixel_index = image_pixel_index;
+    Information.normal_vector_matrix = normal_vector_matrix;
 end

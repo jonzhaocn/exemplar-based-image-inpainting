@@ -13,23 +13,37 @@ function Information = update_information(image_data, coordinate, Information)
     Gradient = Information.Gradient;
     patch_size = Information.patch_size;
     image_pixel_index = Information.image_pixel_index;
+    normal_vector_matrix = Information.normal_vector_matrix;
     %% update mask
     old_mask = mask;
     [~, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
     mask(row_offset+coordinate(1), col_offset+coordinate(2)) = 1;
     mask_3d = repmat(mask, 1,1,3);
     %% update Boundary
-    % update Boundary.map
+    % update Boundary.map and normal_vector
     windows_size = patch_size+4;
-    [boundary_map, row_offset, col_offset] = get_patch_data(mask, coordinate, windows_size);
-    boundary_map = 1-boundary_map;
+    [mask_patch, row_offset, col_offset] = get_patch_data(mask, coordinate, windows_size);
+    
+    % normal vector
+    [Nx, Ny] = gradient(double(1-mask_patch));
+    Normal = cat(3, Nx, Ny);
+    Normal = Normal ./ (sqrt(Nx.^2 + Ny.^2));
+    Normal(~isfinite(Normal))=0; % handle NaN and Inf
+    
+    boundary_map = 1-mask_patch;
     se = strel('square',3);
     boundary_map = imdilate(boundary_map, se) - boundary_map;
+    
     row_indicator = row_offset>-(windows_size-1)/2 & row_offset<(windows_size-1)/2;
     col_indicator = col_offset>-(windows_size-1)/2 & col_offset<(windows_size-1)/2;
     row_offset = row_offset(row_indicator);
     col_offset = col_offset(col_indicator);
+    
+    % update normal_vector
+    normal_vector_matrix(row_offset+coordinate(1), col_offset+coordinate(2), :) = Normal(row_indicator, col_indicator, :);
+    % update Boundary.map
     Boundary.map(row_offset+coordinate(1), col_offset+coordinate(2)) = boundary_map(row_indicator, col_indicator);
+    
     % update Boundary.is_empty
     if ~any(Boundary.map(:))
         Boundary.is_empty = true;
@@ -41,6 +55,7 @@ function Information = update_information(image_data, coordinate, Information)
     [row, col] = ind2sub(size(Boundary.map), update_index(:));
     Boundary.update_sub = [row col];
     %% update priority_map
+    % erase priority_map near the update area
     priority_map(row_offset+coordinate(1), col_offset+coordinate(2)) = 0;
     %% update pixel_confidence
     update_pixel = (~old_mask & mask).* image_pixel_index;
@@ -48,61 +63,50 @@ function Information = update_information(image_data, coordinate, Information)
     patch_pixel_confidence = get_patch_data(pixel_confidence, coordinate, patch_size);
     pixel_confidence(update_pixel) = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
     %% update Gradient
-    windows_size = patch_size + 4;
-    [patch_image_data, row_offset, col_offset] = get_patch_data(image_data, coordinate, windows_size);
-    row_indicator = row_offset>-(windows_size-1)/2 & row_offset<(windows_size-1)/2;
-    col_indicator = col_offset>-(windows_size-1)/2 & col_offset<(windows_size-1)/2;
-    row_offset = row_offset(row_indicator);
-    col_offset = col_offset(col_indicator);
-    gx = patch_image_data(:,[2:end,end],:)-patch_image_data;
-    gy = patch_image_data([1,1:end-1],:,:)-patch_image_data;
+    gx = Gradient.gx;
+    gy = Gradient.gy;
     
-    gx = gx(row_indicator, col_indicator,:);
-    gy = gy(row_indicator, col_indicator,:);
-    
-    index = get_patch_data(image_pixel_index, coordinate, windows_size-2);
-    recount_map = zeros(size(row_offset,1), size(col_offset,1));
-    row = row_offset==-(windows_size-3)/2 | row_offset==-(windows_size-5)/2 | row_offset==(windows_size-3)/2 | row_offset==(windows_size-5)/2;
-    col = col_offset==-(windows_size-3)/2 | col_offset==-(windows_size-5)/2 | col_offset==(windows_size-3)/2 | col_offset==(windows_size-5)/2;
-    recount_map(row,:) = 1;
-    recount_map(:,col) = 1;
-    for i =1:size(recount_map,1)
-        for j = 1:size(recount_map,2)
-            [r, c] = ind2sub(size(mask), index(i,j));
-            if recount_map(i,j)==0 || mask(r,c)==0
+    half_length = floor((patch_size+2)/2);
+    for r =max(1, coordinate(1)-half_length): min(size(gx,1), coordinate(1)+half_length)
+        for c = max(1, coordinate(2)-half_length): min(size(gx, 2), coordinate(2)+half_length)
+            
+            if mask(r,c)==0
                 continue;
             end
-            if c+1<=size(image_data,2) && mask(r,c+1)==1
-                gx(i,j,:) = image_data(r,c+1,:)-image_data(r,c,:);
+            
+            % gx(r,c) = image(r+1,c) - image(r,c)
+            if r+1<=size(image_data,1) && mask(r+1,c)==1
+                gx(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
+            % if the pixels below I(r,c) is missing, using the above one instead
+            else
+                if r-1>=1 && mask(r-1,c)==1
+                    gx(r,c,:) = image_data(r-1,c,:)-image_data(r,c,:);
+                else
+                    gx(r,c,:) = 0;
+                end
+            end
+            
+            % gy
+            if c+1<=size(image_data, 2) && mask(r,c+1)==1
+                gy(r,c,:) = image_data(r,c+1,:) - image_data(r,c,:);
             else
                 if c-1>=1 && mask(r,c-1)==1
-                    gx(i,j,:) = image_data(r,c-1,:)-image_data(r,c,:);
+                    gy(r,c,:) = image_data(r,c-1,:)-image_data(r,c,:);
                 else
-                    gx(i,j,:) = 0;
+                    gy(r,c,:) = 0;
                 end
             end
-            if r-1>=1 && mask(r-1,c)==1
-                gy(i,j,:) = image_data(r-1,c,:) - image_data(r,c,:);
-            else
-                if r+1<=size(image_data,1) && mask(r+1,c)==1
-                    gy(i,j,:) = image_data(r+1,c,:)-image_data(r,c,:);
-                else
-                    gy(i,j,:) = 0;
-                end
-            end
+            
         end
     end
-    [r,c]= ind2sub(size(mask), index);
-    r = r(:,1);
-    c = c(1,:)';
-    Gradient.gx(r,c,:) = gx;
-    Gradient.gx = Gradient.gx .* mask_3d;
-    Gradient.gy(r,c,:) = gy;
-    Gradient.gy = Gradient.gy .* mask_3d;
+    
+    Gradient.gx = gx .* mask_3d;
+    Gradient.gy = gy .* mask_3d;
     %% save Information
     Information.mask = mask;
     Information.Boundary = Boundary;
     Information.priority_map = priority_map;
     Information.pixel_confidence = pixel_confidence;
     Information.Gradient = Gradient;
+    Information.normal_vector_matrix = normal_vector_matrix;
 end

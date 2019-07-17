@@ -2,18 +2,18 @@
 % return the coordination of the patch which has the biggest priority
 % Input:
 %   image_data: image array
-%   Information: some information of image, is a strcutre
+%   Information: some information of image, it is a strcutre
 % Output:
 %   coordinate: the coordinate of the patch which has the biggest priority
-%   Information: some information of image, is a strcutre
+%   Information: some information of image, it is a strcutre
 function [coordinate, Information] = calculate_priority(image_data, Information)
     % information
     Boundary = Information.Boundary;
     priority_map = Information.priority_map;
-    mask = Information.mask;
     pixel_confidence = Information.pixel_confidence;
     Gradient = Information.Gradient;
     patch_size = Information.patch_size;
+    normal_vector_matrix = Information.normal_vector_matrix;
     % 
     image_size = size(image_data);
     for i = 1:size(Boundary.update_sub,1)
@@ -27,7 +27,7 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
             continue
         end
         % confidence
-        patch_pixel_confidence = get_patch_data(pixel_confidence, [row,col], patch_size);
+        patch_pixel_confidence = get_patch_data(pixel_confidence, [row, col], patch_size);
         patch_confidence = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
         % isophote
         gx = get_patch_data(Gradient.gx, [row, col], patch_size);
@@ -39,9 +39,9 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
         gy = gy(index);
         isophote = [-gy, gx];
 %         normal vector
-        normal_vector = get_normal_vector(mask, [row, col]);
+        normal_vector = squeeze(normal_vector_matrix(row, col, :))';
 %         normal_vector = get_normal_vector2(mask, [row,col], patch_size);
-        priority_map(row,col) = patch_confidence * norm(isophote .* normal_vector);
+        priority_map(row, col) = patch_confidence * norm(isophote .* normal_vector);
     end
     [value, index] = max(priority_map(:));
     if value == 0
