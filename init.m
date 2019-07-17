@@ -14,8 +14,8 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     end
     %% calculate
     % mask: missing pixel will be marked as 0
-    mask = 1 - target_region;
-    mask_3d = cat(3,mask,mask,mask);
+    mask = ~target_region;
+    mask_3d = repmat(mask, 1, 1, 3);
     % source_region and target_region
     % confidence of pixel
     pixel_confidence = double(mask);
@@ -66,8 +66,8 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
             end
         end
     end
-    gx = gx.*mask_3d;
-    gy = gy.*mask_3d;
+    gx = sum(gx.*mask_3d, 3)/size(image_data, 3);
+    gy = sum(gy.*mask_3d, 3)/size(image_data, 3);
     Gradient = struct('gx',gx,'gy',gy);
     % stable_patch_map
     % if a patch do not contain missing pixels, it is stabel

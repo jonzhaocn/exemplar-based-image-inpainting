@@ -16,7 +16,7 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
     normal_vector_matrix = Information.normal_vector_matrix;
     % 
     image_size = size(image_data);
-    for i = 1:size(Boundary.update_sub,1)
+    for i = 1:size(Boundary.update_sub, 1)
         row = Boundary.update_sub(i,1);
         col = Boundary.update_sub(i,2);
         % incompleted patch
@@ -30,17 +30,11 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
         patch_pixel_confidence = get_patch_data(pixel_confidence, [row, col], patch_size);
         patch_confidence = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
         % isophote
-        gx = get_patch_data(Gradient.gx, [row, col], patch_size);
-        gy = get_patch_data(Gradient.gy, [row, col], patch_size);
-        % get sum along the thrid dim
-        gradient_norm = sum(sqrt(gx.^2 + gy.^2), 3) / size(gx,3);
-        [~, index] = max(gradient_norm(:));
-        gx = gx(index);
-        gy = gy(index);
+        gx = Gradient.gx(row, col);
+        gy = Gradient.gy(row, col);
         isophote = [-gy, gx];
-%         normal vector
+%       normal vector
         normal_vector = squeeze(normal_vector_matrix(row, col, :))';
-%         normal_vector = get_normal_vector2(mask, [row,col], patch_size);
         priority_map(row, col) = patch_confidence * norm(isophote .* normal_vector);
     end
     [value, index] = max(priority_map(:));

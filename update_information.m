@@ -25,12 +25,12 @@ function Information = update_information(image_data, coordinate, Information)
     [mask_patch, row_offset, col_offset] = get_patch_data(mask, coordinate, windows_size);
     
     % normal vector
-    [Nx, Ny] = gradient(double(1-mask_patch));
+    [Nx, Ny] = gradient(~mask_patch);
     Normal = cat(3, Nx, Ny);
     Normal = Normal ./ (sqrt(Nx.^2 + Ny.^2));
     Normal(~isfinite(Normal))=0; % handle NaN and Inf
     
-    boundary_map = 1-mask_patch;
+    boundary_map = ~mask_patch;
     se = strel('square',3);
     boundary_map = imdilate(boundary_map, se) - boundary_map;
     
@@ -76,24 +76,24 @@ function Information = update_information(image_data, coordinate, Information)
             
             % gx(r,c) = image(r+1,c) - image(r,c)
             if r+1<=size(image_data,1) && mask(r+1,c)==1
-                gx(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
+                gx(r,c) = sum(image_data(r+1,c,:)-image_data(r,c,:), 3)/size(image_data, 3);
             % if the pixels below I(r,c) is missing, using the above one instead
             else
                 if r-1>=1 && mask(r-1,c)==1
-                    gx(r,c,:) = image_data(r-1,c,:)-image_data(r,c,:);
+                    gx(r,c) = sum(image_data(r-1,c,:)-image_data(r,c,:), 3)/size(image_data, 3);
                 else
-                    gx(r,c,:) = 0;
+                    gx(r,c) = 0;
                 end
             end
             
             % gy
             if c+1<=size(image_data, 2) && mask(r,c+1)==1
-                gy(r,c,:) = image_data(r,c+1,:) - image_data(r,c,:);
+                gy(r,c) = sum(image_data(r,c+1,:) - image_data(r,c,:), 3)/size(image_data, 3);
             else
                 if c-1>=1 && mask(r,c-1)==1
-                    gy(r,c,:) = image_data(r,c-1,:)-image_data(r,c,:);
+                    gy(r,c) = sum(image_data(r,c-1,:)-image_data(r,c,:), 3)/size(image_data, 3);
                 else
-                    gy(r,c,:) = 0;
+                    gy(r,c) = 0;
                 end
             end
             
