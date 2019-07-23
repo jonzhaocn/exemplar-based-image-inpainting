@@ -32,10 +32,13 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     Boundary = struct('map', boundary_map, 'update_sub', update_sub, 'is_empty', is_empty);
     
     % normal vector
-    [Nx, Ny] = gradient(double(~mask));
-    normal_vector_matrix = cat(3, Nx, Ny);
-    normal_vector_matrix = normal_vector_matrix ./ (sqrt(Nx.^2 + Ny.^2));
-    normal_vector_matrix(~isfinite(normal_vector_matrix))=0; % handle NaN and Inf
+    [ny, nx] = gradient(double(~mask));
+    length = (sqrt(nx.^2 + ny.^2));
+    nx = nx ./ length;
+    nx(~isfinite(nx))=0; % handle NaN and Inf
+    ny = ny ./ length;
+    ny(~isfinite(ny))=0;
+    NormalVector = struct('nx', nx, 'ny', ny);
     
     % Gradient, image gradient in x axis and y axis
     gx = image_data([2:end,end],:,:);
@@ -86,5 +89,5 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     Information.image_data_CIELab = rgb2lab(image_data);
     Information.stable_patch_index_map = stable_patch_index;
     Information.image_pixel_index = image_pixel_index;
-    Information.normal_vector_matrix = normal_vector_matrix;
+    Information.NormalVector = NormalVector;
 end

@@ -13,7 +13,7 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
     pixel_confidence = Information.pixel_confidence;
     Gradient = Information.Gradient;
     patch_size = Information.patch_size;
-    normal_vector_matrix = Information.normal_vector_matrix;
+    NormalVector = Information.NormalVector;
     % 
     image_size = size(image_data);
     for i = 1:size(Boundary.update_sub, 1)
@@ -34,8 +34,11 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
         gy = Gradient.gy(row, col);
         isophote = [-gy, gx];
 %       normal vector
-        normal_vector = squeeze(normal_vector_matrix(row, col, :))';
-        priority_map(row, col) = patch_confidence * norm(isophote .* normal_vector);
+        nx = NormalVector.nx(row, col);
+        ny = NormalVector.ny(row, col);
+        normal_vector = [nx, ny];
+        Imax = 255;
+        priority_map(row, col) = patch_confidence * abs((isophote * normal_vector')/Imax + 1e-3);
     end
     [value, index] = max(priority_map(:));
     if value == 0

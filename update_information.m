@@ -13,36 +13,42 @@ function Information = update_information(image_data, coordinate, Information)
     Gradient = Information.Gradient;
     patch_size = Information.patch_size;
     image_pixel_index = Information.image_pixel_index;
-    normal_vector_matrix = Information.normal_vector_matrix;
+    NormalVector = Information.NormalVector;
     %% update mask
     old_mask = mask;
-    [~, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
-    mask(row_offset+coordinate(1), col_offset+coordinate(2)) = 1;
+    [~, row_offset_ps, col_offset_ps] = get_patch_data(mask, coordinate, patch_size);
+    mask(row_offset_ps+coordinate(1), col_offset_ps+coordinate(2)) = 1;
     mask_3d = repmat(mask, 1,1,3);
     %% update Boundary
     % update Boundary.map and normal_vector
     windows_size = patch_size+4;
-    [mask_patch, row_offset, col_offset] = get_patch_data(mask, coordinate, windows_size);
+    [mask_patch, row_offset_ws, col_offset_ws] = get_patch_data(mask, coordinate, windows_size);
     
     % normal vector
-    [Nx, Ny] = gradient(~mask_patch);
-    Normal = cat(3, Nx, Ny);
-    Normal = Normal ./ (sqrt(Nx.^2 + Ny.^2));
-    Normal(~isfinite(Normal))=0; % handle NaN and Inf
+    [ny, nx] = gradient(double(mask_patch), 1);
+    length = (sqrt(nx.^2 + ny.^2));
+    nx = nx*2;
+    ny = ny*2;
+    nx = nx ./ length;
+    nx(~isfinite(nx))=0; % handle NaN and Inf
+    ny = ny ./ length;
+    ny(~isfinite(ny))=0; 
     
     boundary_map = ~mask_patch;
     se = strel('square',3);
     boundary_map = imdilate(boundary_map, se) - boundary_map;
     
-    row_indicator = row_offset>-(windows_size-1)/2 & row_offset<(windows_size-1)/2;
-    col_indicator = col_offset>-(windows_size-1)/2 & col_offset<(windows_size-1)/2;
-    row_offset = row_offset(row_indicator);
-    col_offset = col_offset(col_indicator);
+    row_indicator = row_offset_ws>-(windows_size-1)/2 & row_offset_ws<(windows_size-1)/2;
+    col_indicator = col_offset_ws>-(windows_size-1)/2 & col_offset_ws<(windows_size-1)/2;
+    row_offset_ws = row_offset_ws(row_indicator);
+    col_offset_ws = col_offset_ws(col_indicator);
     
     % update normal_vector
-    normal_vector_matrix(row_offset+coordinate(1), col_offset+coordinate(2), :) = Normal(row_indicator, col_indicator, :);
+    NormalVector.nx(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2)) = nx(row_indicator, col_indicator);
+    NormalVector.ny(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2)) = ny(row_indicator, col_indicator);
+    
     % update Boundary.map
-    Boundary.map(row_offset+coordinate(1), col_offset+coordinate(2)) = boundary_map(row_indicator, col_indicator);
+    Boundary.map(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2)) = boundary_map(row_indicator, col_indicator);
     
     % update Boundary.is_empty
     if ~any(Boundary.map(:))
@@ -50,13 +56,13 @@ function Information = update_information(image_data, coordinate, Information)
     end
     % update Boundary.update_sub
     index = Boundary.map .* image_pixel_index;
-    update_index = index(row_offset+coordinate(1), col_offset+coordinate(2));
+    update_index = index(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2));
     update_index(update_index==0) = [];
     [row, col] = ind2sub(size(Boundary.map), update_index(:));
     Boundary.update_sub = [row col];
     %% update priority_map
     % erase priority_map near the update area
-    priority_map(row_offset+coordinate(1), col_offset+coordinate(2)) = 0;
+    priority_map(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2)) = 0;
     %% update pixel_confidence
     update_pixel = (~old_mask & mask).* image_pixel_index;
     update_pixel(update_pixel==0) = [];
@@ -108,5 +114,5 @@ function Information = update_information(image_data, coordinate, Information)
     Information.priority_map = priority_map;
     Information.pixel_confidence = pixel_confidence;
     Information.Gradient = Gradient;
-    Information.normal_vector_matrix = normal_vector_matrix;
+    Information.NormalVector = NormalVector;
 end
