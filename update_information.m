@@ -12,7 +12,6 @@ function Information = update_information(image_data, coordinate, Information)
     pixel_confidence = Information.pixel_confidence;
     Gradient = Information.Gradient;
     patch_size = Information.patch_size;
-    image_pixel_index = Information.image_pixel_index;
     NormalVector = Information.NormalVector;
     %% update mask
     old_mask = mask;
@@ -55,8 +54,8 @@ function Information = update_information(image_data, coordinate, Information)
         Boundary.is_empty = true;
     end
     % update Boundary.update_sub
-    index = Boundary.map .* image_pixel_index;
-    update_index = index(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2));
+    update_index = Boundary.map(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2));
+    update_index = update_index .* (repmat(row_offset_ws+coordinate(1), 1, size(update_index, 2)) + repmat((col_offset_ws'+coordinate(2)-1)*size(image_data, 1), size(update_index, 1), 1));
     update_index(update_index==0) = [];
     [row, col] = ind2sub(size(Boundary.map), update_index(:));
     Boundary.update_sub = [row col];
@@ -64,10 +63,12 @@ function Information = update_information(image_data, coordinate, Information)
     % erase priority_map near the update area
     priority_map(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2)) = 0;
     %% update pixel_confidence
-    update_pixel = (~old_mask & mask).* image_pixel_index;
-    update_pixel(update_pixel==0) = [];
+    old_mask_patch = get_patch_data(old_mask, coordinate, patch_size);
+    mask_patch_ps = get_patch_data(mask, coordinate, patch_size);
+    update_pixel_confidence_map = (~old_mask_patch & mask_patch_ps);
     patch_pixel_confidence = get_patch_data(pixel_confidence, coordinate, patch_size);
-    pixel_confidence(update_pixel) = sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
+    pixel_confidence(row_offset_ps+coordinate(1), col_offset_ps+coordinate(2)) = ...
+        pixel_confidence(row_offset_ps+coordinate(1), col_offset_ps+coordinate(2)) + update_pixel_confidence_map * sum(patch_pixel_confidence(:))/numel(patch_pixel_confidence);
     %% update Gradient
     gx = Gradient.gx;
     gy = Gradient.gy;
