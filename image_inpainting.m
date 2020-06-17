@@ -20,7 +20,7 @@ image_data = image_data.*(1-target_region);
 imshow(image_data);
 imwrite(image_data, 'masked_image.jpg');
 % init
-[image_data, Information] = init(image_data, patch_size, target_region);
+[image_data, Information] = init(image_data, target_region, patch_size);
 % while there are some missing pixels in image, inpaint the image
 
 tic

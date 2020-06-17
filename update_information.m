@@ -53,12 +53,13 @@ function Information = update_information(image_data, coordinate, Information)
     if ~any(Boundary.map(:))
         Boundary.is_empty = true;
     end
-    % update Boundary.update_sub
+    % update Boundary.update_coor
     update_index = Boundary.map(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2));
     update_index = update_index .* (repmat(row_offset_ws+coordinate(1), 1, size(update_index, 2)) + repmat((col_offset_ws'+coordinate(2)-1)*size(image_data, 1), size(update_index, 1), 1));
     update_index(update_index==0) = [];
     [row, col] = ind2sub(size(Boundary.map), update_index(:));
-    Boundary.update_sub = [row col];
+    Boundary.update_coor = [row col];
+    
     %% update priority_map
     % erase priority_map near the update area
     priority_map(row_offset_ws+coordinate(1), col_offset_ws+coordinate(2)) = 0;

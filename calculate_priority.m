@@ -16,9 +16,9 @@ function [coordinate, Information] = calculate_priority(image_data, Information)
     NormalVector = Information.NormalVector;
     % 
     image_size = size(image_data);
-    for i = 1:size(Boundary.update_sub, 1)
-        row = Boundary.update_sub(i,1);
-        col = Boundary.update_sub(i,2);
+    for i = 1:size(Boundary.update_coor, 1)
+        row = Boundary.update_coor(i,1);
+        col = Boundary.update_coor(i,2);
         % incompleted patch
         if row<(patch_size+1)/2 || row>image_size(1)-(patch_size-1)/2
             continue

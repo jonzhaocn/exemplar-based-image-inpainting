@@ -7,29 +7,32 @@
 %   image_data: image array
 %   Information: some information help to inpaint image
 % 
-function [image_data, Information] = init(image_data, patch_size, target_region)
+function [image_data, Information] = init(image_data, target_region, patch_size)
     %% check
     if mod(patch_size,2)==0
-        error('patch_size should be a odd.')
+        error('patch_size should be odd.')
     end
     %% calculate
     % mask: missing pixel will be marked as 0
     mask = ~target_region;
     mask_3d = repmat(mask, 1, 1, 3);
-    % source_region and target_region
+    
     % confidence of pixel
     pixel_confidence = double(mask);
-    % boundary_map, the pixel in boundary will be marked as 1
-    boundary_map = 1-mask;
+    
+    % boundary_map: the valid pixels around target_region
+    boundary_map = double(target_region);
     se = strel('square',3);
     boundary_map = imdilate(boundary_map, se) - boundary_map;
+    
     priority_map = zeros(size(boundary_map));
+    
     % Boundary
     [row, col] = find(boundary_map==1);
-    % update_sub, the coordination of the patch whos priority need to be calculate 
-    update_sub = [row col];
+    % update_coor, the coordination of the patch whos priority need to be calculate 
+    update_coor = [row col];
     is_empty = ~any(boundary_map(:));
-    Boundary = struct('map', boundary_map, 'update_sub', update_sub, 'is_empty', is_empty);
+    Boundary = struct('map', boundary_map, 'update_coor', update_coor, 'is_empty', is_empty);
     
     % normal vector
     [ny, nx] = gradient(double(~mask));
@@ -45,9 +48,9 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     gx = gx - image_data;
     gy = image_data(:,[2:end,end],:);
     gy = gy - image_data;
-    for i=1:size(update_sub, 1)
-        r = update_sub(i,1);
-        c = update_sub(i,2);
+    for i=1:size(update_coor, 1)
+        r = update_coor(i,1);
+        c = update_coor(i,2);
         % gx(r,c) = image(r+1,c) - image(r,c)
         if r+1<=size(image_data,1) && mask(r+1,c)==1
             gx(r,c,:) = image_data(r+1,c,:)-image_data(r,c,:);
@@ -72,6 +75,7 @@ function [image_data, Information] = init(image_data, patch_size, target_region)
     gx = sum(gx.*mask_3d, 3)/size(image_data, 3);
     gy = sum(gy.*mask_3d, 3)/size(image_data, 3);
     Gradient = struct('gx',gx,'gy',gy);
+    
     % stable_patch_map
     % if a patch do not contain missing pixels, it is stabel
     stable_patch_index_map = (conv2(mask, ones(patch_size, patch_size), 'valid') == patch_size^2);
