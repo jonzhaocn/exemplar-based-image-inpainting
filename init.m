@@ -87,7 +87,6 @@ function [image_data, Information] = init(image_data, target_region, patch_size)
     Information.pixel_confidence = pixel_confidence;
     Information.Gradient = Gradient;
     Information.patch_size = patch_size;
-    Information.image_data_CIELab = rgb2lab(image_data);
     Information.stable_patch_index_map = stable_patch_index_map;
     Information.NormalVector = NormalVector;
 end

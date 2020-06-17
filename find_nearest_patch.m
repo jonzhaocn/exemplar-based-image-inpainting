@@ -14,15 +14,11 @@ function nearest_patch = find_nearest_patch(image_data, coordinate, Information)
     mask = Information.mask;
     patch_size = Information.patch_size;
     half_patch_size = floor(patch_size/2);
-    image_data_CIELab = Information.image_data_CIELab;
     stable_patch_index_map = Information.stable_patch_index_map;
     
     % get the target patch and it's mask according to the coordiante
     [patch_mask, row_offset, col_offset] = get_patch_data(mask, coordinate, patch_size);
     target_patch = get_patch_data(image_data, coordinate, patch_size);
-    
-    % eucliden distance in lab colour space are more meaningful than in RGB space
-    target_patch = rgb2lab(target_patch);
     
     % if the target patch is incompleted or it's size is smaller than
     % patch_size^2
@@ -37,9 +33,9 @@ function nearest_patch = find_nearest_patch(image_data, coordinate, Information)
     
     % get the ssd between target patch and every patch in image data
     % ssd:Sum of squares of difference
-    ssd_map_1 = ssd_patch_channel(image_data_CIELab(:,:,1), target_patch(:,:,1), patch_mask);
-    ssd_map_2 = ssd_patch_channel(image_data_CIELab(:,:,2), target_patch(:,:,2), patch_mask);
-    ssd_map_3 = ssd_patch_channel(image_data_CIELab(:,:,3), target_patch(:,:,3), patch_mask);
+    ssd_map_1 = ssd_patch_channel(image_data(:,:,1), target_patch(:,:,1), patch_mask);
+    ssd_map_2 = ssd_patch_channel(image_data(:,:,2), target_patch(:,:,2), patch_mask);
+    ssd_map_3 = ssd_patch_channel(image_data(:,:,3), target_patch(:,:,3), patch_mask);
     ssd_map = ssd_map_1 + ssd_map_2 + ssd_map_3;
     
     % we should set the forbid area to avoid to obtain a patch that has some missing pixels
